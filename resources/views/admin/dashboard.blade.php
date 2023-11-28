@@ -3,15 +3,6 @@
 @section('title', trans('admin.dashboard.title'))
 
 @section('content')
-    @if(! $secure)
-        <div id="notHttpsAlert" class="alert alert-warning shadow-sm" role="alert">
-            <i class="bi bi-exclamation-triangle"></i> {{ trans('admin.dashboard.http') }}
-        </div>
-        <div id="proxyAlert" class="alert alert-info shadow-sm d-none" role="alert">
-            <i class="bi bi-info-circle"></i> {{ trans('admin.dashboard.cloudflare') }}
-        </div>
-    @endif
-
     @if(config('mail.default') === 'array')
         <div class="alert alert-warning shadow-sm" role="alert">
             <i class="bi bi-info-circle"></i> @lang('admin.dashboard.emails', ['url' => route('admin.settings.mail')])
