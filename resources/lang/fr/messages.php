@@ -165,13 +165,14 @@ return [
             'register' => 'Inscription: :date',
             'money' => 'Argent: :money',
             '2fa' => 'Authentification à deux facteurs (A2F): :2fa',
+            'discord' => 'Compte Discord lié: :user',
         ],
 
         '2fa' => [
             'enable' => 'Activer l\'A2F',
             'disable' => 'Désactiver l\'A2F',
             'manage' => 'Gérer l\'A2F',
-            'info' => 'Scannez le QR code ci-dessus avec une application d\'authentification à deux facteurs sur votre téléphone comme <a href="https://authy.com/" target="_blank" rel="noopener norefferer">Authy</a>, <a href="https://outercorner.com/secrets-ios/" target="_blank" rel="noopener norefferer">Secrets</a>, ou Google Authenticator.',
+            'info' => 'Scannez le QR code ci-dessus avec une application d\'authentification à deux facteurs sur votre téléphone comme <a href="https://authy.com/" target="_blank" rel="noopener norefferer">Authy</a>, <a href="https://secrets.app/" target="_blank" rel="noopener norefferer">Secrets</a>, ou Google Authenticator.',
             'secret' => 'Clé secrète: :secret',
             'title' => 'Authentification à deux facteurs',
             'codes' => 'Afficher les codes de récupération',
@@ -180,9 +181,15 @@ return [
             'disabled' => 'Authentification à deux facteurs désactivée.',
         ],
 
+        'discord' => [
+            'link' => 'Associer à Discord',
+            'unlink' => 'Dissocier de Discord',
+            'linked' => 'Votre compte a bien été associé à votre compte Discord.',
+        ],
+
         'money_transfer' => [
             'title' => 'Transfert d\'argent',
-            'self' => 'Vous ne pouvez pas vous envoyer d\'argent à vous même.',
+            'user' => 'Cet utilisateur n\'a pas été trouvé.',
             'balance' => 'Vous n\'avez pas assez d\'argent pour faire ce transfert.',
             'success' => 'L\'argent a été envoyé avec succès.',
             'notification' => ':user vous a envoyé :money.',
@@ -216,5 +223,17 @@ return [
 
         'size' => 'L\'image #image_name# est trop lourde (#image_size#).\nLa taille maximum est #image_max_size#.',
         'error' => 'Une erreur est survenue lors du téléchargement de l\'image #image_name#.',
+    ],
+
+    'discord_roles' => [
+        'id' => [
+            'name' => 'ID du rôle',
+            'description' => 'ID du rôle sur le site.',
+        ],
+
+        'power' => [
+            'name' => 'Pouvoir du rôle',
+            'description' => 'Pourvoir du rôle sur le site égal ou supérieur à',
+        ],
     ],
 ];

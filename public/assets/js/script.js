@@ -63,7 +63,7 @@ document.querySelectorAll('[data-like-url]').forEach(function (el) {
             const likesCount = el.querySelector('.likes-count');
 
             if (likesCount) {
-                likesCount.innerHTML = json.data.likes;
+                likesCount.innerText = json.data.likes;
             }
         }).finally(function () {
             likeSpinner.classList.add('d-none');
@@ -109,3 +109,28 @@ if (readNotificationsBtn) {
             });
     });
 }
+
+/*
+ * Theme switcher
+ */
+document.querySelectorAll('[data-theme-value]').forEach(function (el) {
+    el.addEventListener('click', function (ev) {
+        ev.preventDefault()
+
+        const theme = el.getAttribute('data-theme-value')
+
+        document.body.setAttribute('data-bs-theme', theme)
+
+        document.querySelectorAll('[data-theme-value]').forEach(function (child) {
+            const childTheme = child.getAttribute('data-theme-value')
+
+            if (childTheme === theme) {
+                child.classList.add('d-none')
+            } else {
+                child.classList.remove('d-none')
+            }
+        })
+
+        axios.post(el.href, { theme: theme })
+    })
+});

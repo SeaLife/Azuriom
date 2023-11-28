@@ -20,6 +20,7 @@ Azuriom natively supports the following games:
 * [ARK: Survival Evolved](https://playark.com/ark-survival-evolved/)
 * [Rust](https://rust.facepunch.com/)
 * [FiveM](https://fivem.net/)
+* [Unturned](https://smartlydressedgames.com/)
 * [Counter-Strike: Global Offensive](https://blog.counter-strike.net/)
 * [Team Fortress 2](https://www.teamfortress.com/)
 
@@ -34,6 +35,8 @@ Azuriom's documentation is available [on our website](https://azuriom.com/docs).
 ## Installation
 
 You can find system requirements and installation guide on our [documentation](https://azuriom.com/docs/installation).
+
+You can find the documentation for launching a docker development environment at [INSTALL.md](docker/INSTALL.md)
 
 ## Community
 
@@ -57,7 +60,7 @@ If you discover any security related issues within Azuriom, please send an e-mai
 
 ## Support us
 
-You can support Azuriom on [DonorBox](https://donorbox.org/Azuriom).
+If you like this project, please consider supporting us on [GitHub sponsors](https://github.com/sponsors/Azuriom).
 
 ## License
 

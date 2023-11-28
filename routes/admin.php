@@ -43,6 +43,7 @@ Route::prefix('settings')->name('settings.')->middleware('can:admin.settings')->
 
     Route::get('/performance', [SettingsController::class, 'performance'])->name('performance');
     Route::get('/storage/link', [SettingsController::class, 'linkStorage'])->name('link-storage');
+    Route::get('/migrate', [SettingsController::class, 'migrate'])->name('migrate');
 
     Route::get('/seo', [SettingsController::class, 'seo'])->name('seo');
     Route::post('/seo/update', [SettingsController::class, 'updateSeo'])->name('seo.update');
@@ -62,6 +63,8 @@ Route::prefix('settings')->name('settings.')->middleware('can:admin.settings')->
 Route::prefix('users')->name('users.')->middleware('can:admin.users')->group(function () {
     Route::post('/{user}/verify', [UserController::class, 'verifyEmail'])->name('verify');
     Route::post('/{user}/2fa', [UserController::class, 'disable2fa'])->name('2fa');
+    Route::post('/{user}/password/force', [UserController::class, 'forcePasswordChange'])->name('force-password');
+    Route::post('/{user}/discord/unlink', [UserController::class, 'unlinkDiscord'])->name('discord.unlink');
 });
 
 Route::prefix('themes')->name('themes.')->middleware('can:admin.themes')->group(function () {
@@ -101,11 +104,12 @@ Route::post('/navbar-elements/order', [NavbarController::class, 'updateOrder'])-
 Route::resource('social-links', SocialLinkController::class)->except('show');
 Route::post('/social-links/order', [SocialLinkController::class, 'updateOrder'])->name('social-links.update-order');
 
-Route::resource('users', UserController::class)->except('show')->middleware('can:admin.users');
+Route::resource('users', UserController::class)->except('show')->middleware(['can:admin.users', 'throttle:20,1']);
 Route::post('/users/notify', [UserController::class, 'notify'])->name('users.notify.all')->middleware('can:admin.users');
 Route::post('/users/{user}/notify', [UserController::class, 'notify'])->name('users.notify')->middleware('can:admin.users');
 Route::resource('roles', RoleController::class)->except('show')->middleware('can:admin.roles');
 Route::post('/roles/power', [RoleController::class, 'updatePower'])->name('roles.update-power')->middleware('can:admin.roles');
+Route::post('/roles/settings', [RoleController::class, 'updateSettings'])->name('roles.settings')->middleware('can:admin.roles');
 
 Route::resource('bans', BanController::class)->only('index')->middleware('can:admin.users');
 Route::resource('users.bans', BanController::class)->only(['store', 'destroy'])->middleware('can:admin.users');

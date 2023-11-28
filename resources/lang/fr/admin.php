@@ -123,7 +123,7 @@ return [
                 'title' => 'Captcha (protection anti bot)',
                 'site_key' => 'Clé du site',
                 'secret_key' => 'Clé secrète',
-                'recaptcha' => 'Vous pouvez obtenir les clés Google reCaptcha sur le site de <a href="https://www.google.com/recaptcha/" target="_blank" rel="noopener noreferrer">Google reCaptcha</a>. Vous devez utiliser des clés reCaptcha <strong>v2 invisible</strong>.',
+                'recaptcha' => 'Vous pouvez obtenir les clés Google reCAPTCHA sur le site de <a href="https://www.google.com/recaptcha/" target="_blank" rel="noopener noreferrer">Google reCAPTCHA</a>. Vous devez utiliser des clés reCAPTCHA <strong>v2 invisible</strong>.',
                 'hcaptcha' => 'Vous pouvez obtenir les clés hCaptcha sur le site de <a href="https://www.hcaptcha.com/" target="_blank" rel="noopener noreferrer">hCaptcha</a>.',
                 'turnstile' => 'Vous pouvez obtenir les clés Turnstile sur le <a href="https://dash.cloudflare.com/?to=/:account/turnstile" target="_blank" rel="noopener noreferrer">tableau de bord Cloudflare</a>. Vous devez sélectionner le widget "Géré".',
             ],
@@ -176,8 +176,8 @@ return [
         'auth' => [
             'title' => 'Authentification',
 
-            'conditions' => 'Lien des CGU',
-            'conditions_info' => 'Les utilisateurs devront accepter ces conditions lors de l\'inscription.',
+            'conditions' => 'Conditions à accepter lors de l\'inscription',
+            'conditions_info' => 'Liens au format Markdown, par exemple: <code>J\'accepte les [CGU](/lien-des-cgu) et [CGV](/liens-des-cgu)</code>',
             'registration' => 'Activer l\'inscription des utilisateurs',
             'registration_info' => 'Il sera toujours possible de s\'enregistrer par exemple avec des plugins.',
             'api' => 'Activer l\'API auth',
@@ -262,10 +262,11 @@ return [
 
         'ping_info' => 'La liaison par ping ne nécessite pas de plugin, mais cependant vous ne pouvez pas exécuter de commande avec cette liaison.',
         'query_info' => 'La liaison par query ne permet pas d\'exécuter de commandes sur le serveur.',
+        'unturned_info' => 'Vous devez utiliser le RCON de type SRCDS dans OpenMod. Le RCON de RocketMod n\'est pas compatible!',
 
         'query_port_info' => 'Peut être vide si le port est le même que le port du serveur de jeu.',
 
-        'verify' => 'Vérifier la connexion',
+        'verify' => 'Tester les commandes instantanées',
 
         'rcon_password' => 'Mot de passe Rcon',
         'rcon_port' => 'Port Rcon',
@@ -353,14 +354,23 @@ return [
 
         '2fa' => [
             'title' => 'Authentification à deux facteurs',
+            'secured' => 'A2F activée',
             'disable' => 'Désactiver l\'A2F',
             'disabled' => 'L\'authentification à deux facteurs a été désactivée',
+        ],
+
+        'password' => [
+            'title' => 'Dernier changement de mot de passe',
+            'force' => 'Force le changement',
+            'forced' => 'Doit changer son mot de passe',
         ],
 
         'status' => [
             'banned' => 'Utilisateur banni',
             'unbanned' => 'Utilisateur débanni',
         ],
+
+        'discord' => 'Compte Discord associé',
 
         'notify' => 'Envoyer une notification',
         'notify_info' => 'Envoyer une notification à cet utilisateur',
@@ -369,8 +379,10 @@ return [
 
     'roles' => [
         'title' => 'Grades',
-        'edit' => 'Édition du grade :role',
+        'edit' => 'Édition du grade :role (#:id)',
         'create' => 'Création d\'un grade',
+
+        'info' => '(ID: :id, Pouvoir: :power)',
 
         'default' => 'Grade par défaut',
         'admin' => 'Administrateur',
@@ -382,6 +394,19 @@ return [
         'remove_admin' => 'Vous ne pouvez pas retirer la permission admin de votre grade.',
         'delete_default' => 'Ce grade ne peut pas être supprimé.',
         'delete_own' => 'Vous ne pouvez pas supprimer votre grade.',
+
+        'discord' => [
+            'title' => 'Lier les grades avec Discord',
+            'enable' => 'Activer la liaison des grades avec Discord',
+            'enable_info' => 'Une fois activé, modifiez le rôle sur Discord, et ajoutez un pré-requis dans l\'onglet <b>Liens</b>. Les utilisateurs pourront récupérer leur rôle Discord dans le menu du serveur, dans <b>Rôles liés</b>.',
+            'info' => 'Vous devez créer une application sur le <a href="https://discord.com/developers/applications" target="_blank">portail développeur Discord</a> et définir <b>l\'URL de vérification</b> sur <code>:url</code>',
+            'oauth' => 'Puis, dans <b>OAuth2</b> et <b>Général</b>, vous devez ajouter <code>:url</code> dans les <b>Redirections</b>.',
+            'token_info' => 'Le token du Bot peut être obtenu en créant un bot pour votre application, dans l\'onglet <b>Bot</b> à gauche du portail développeur Discord.',
+
+            'token' => 'Discord Bot Token',
+            'client_id' => 'Discord Client ID',
+            'client_secret' => 'Discord Client Secret',
+        ],
     ],
 
     'permissions' => [
@@ -461,7 +486,7 @@ return [
         'available' => 'Plugins disponibles',
 
         'requirements' => [
-            'api' => 'La version de ce plugin n\'est pas compatible avec Azuriom v1.0',
+            'api' => 'La version de ce plugin n\'est pas compatible avec Azuriom v:version',
             'azuriom' => 'Ce plugin n\'est pas compatible avec votre version d\'Azuriom.',
             'game' => 'Ce plugin n\'est pas compatible avec le jeu :game.',
             'plugin' => 'Le plugin ":plugin" est manquant ou sa version n\'est pas compatible avec ce plugin.',
@@ -485,7 +510,7 @@ return [
         'list' => 'Thèmes installés',
         'available' => 'Thèmes disponibles',
         'no-enabled' => 'Vous n\'avez pas de thème activé, le thème par défaut est automatiquement mis en place.',
-        'legacy' => 'La version de ce thème n\'est pas compatible avec Azuriom v1.0',
+        'legacy' => 'La version de ce thème n\'est pas compatible avec Azuriom v:version',
 
         'config' => 'Configurer',
         'disable' => 'Désactiver le thème',

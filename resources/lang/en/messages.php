@@ -165,13 +165,14 @@ return [
             'register' => 'Registered: :date',
             'money' => 'Money: :money',
             '2fa' => 'Two-Factor Authentication (2FA): :2fa',
+            'discord' => 'Linked Discord account: :user',
         ],
 
         '2fa' => [
             'enable' => 'Enable 2FA',
             'disable' => 'Disable 2FA',
             'manage' => 'Manage 2FA',
-            'info' => 'Scan the QR code above with a two-factor authentication app on your phone like <a href="https://authy.com/" target="_blank" rel="noopener norefferer">Authy</a>, <a href="https://outercorner.com/secrets-ios/" target="_blank" rel="noopener norefferer">Secrets</a> or Google Authenticator.',
+            'info' => 'Scan the QR code above with a two-factor authentication app on your phone like <a href="https://authy.com/" target="_blank" rel="noopener norefferer">Authy</a>, <a href="https://secrets.app/" target="_blank" rel="noopener norefferer">Secrets</a> or Google Authenticator.',
             'secret' => 'Secret key: :secret',
             'title' => 'Two-Factor Authentication',
             'codes' => 'Show recovery codes',
@@ -180,9 +181,15 @@ return [
             'disabled' => 'Two-Factor Authentication disabled.',
         ],
 
+        'discord' => [
+            'link' => 'Link to Discord',
+            'unlink' => 'Unlink from Discord',
+            'linked' => 'Your Discord account has been linked successfully.',
+        ],
+
         'money_transfer' => [
             'title' => 'Money transfer',
-            'self' => 'You can\'t send money to yourself.',
+            'user' => 'This user was not found.',
             'balance' => 'You don\'t have enough money to make this transfer.',
             'success' => 'The money was successfully sent.',
             'notification' => ':user sent you :money.',
@@ -216,5 +223,17 @@ return [
 
         'size' => 'Image #image_name# is too big (#image_size#).\nMaximum file size is #image_max_size#.',
         'error' => 'Something went wrong when uploading the image #image_name#.',
+    ],
+
+    'discord_roles' => [
+        'id' => [
+            'name' => 'Role ID',
+            'description' => 'ID of the role on the website.',
+        ],
+
+        'power' => [
+            'name' => 'Role Power',
+            'description' => 'Power of the role on the website equal or greater than',
+        ],
     ],
 ];

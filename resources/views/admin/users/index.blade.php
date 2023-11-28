@@ -3,8 +3,8 @@
 @section('title', trans('admin.users.title'))
 
 @section('content')
-    <form class="row g-3 align-items-center" action="{{ route('admin.users.index') }}" method="GET">
-        <div class="col-md4 col-12 mb-3">
+    <form class="row g-3 align-items-center" action="{{ route('admin.users.index') }}" method="GET" role="search">
+        <div class="col-md-4 col-12 mb-3">
             <label class="visually-hidden" for="searchInput">
                 {{ trans('messages.actions.search') }}
             </label>
@@ -41,7 +41,7 @@
                                 {{ $user->id }}
 
                                 @if($user->isDeleted())
-                                    <i class="bi bi-person-x text-dark" title="{{ trans('admin.users.deleted') }}" data-bs-toggle="tooltip"></i>
+                                    <i class="bi bi-person-x text-secondary" title="{{ trans('admin.users.deleted') }}" data-bs-toggle="tooltip"></i>
                                 @elseif($user->isAdmin())
                                     <i class="bi bi-trophy text-warning" title="{{ trans('admin.users.admin') }}" data-bs-toggle="tooltip"></i>
                                 @endif
@@ -54,6 +54,14 @@
                             </td>
                             <td @if($user->isDeleted()) class="text-decoration-line-through" @endif>
                                 {{ oauth_login() ? ($user->game_id ?? trans('messages.unknown')) : $user->email }}
+
+                                @if($user->hasVerifiedEmail())
+                                    <i class="bi bi-envelope-check text-info" data-bs-toggle="tooltip" title="{{ trans('admin.users.email.verified') }}"></i>
+                                @endif
+
+                                @if($user->hasTwoFactorAuth())
+                                    <i class="bi bi-shield-check text-success" data-bs-toggle="tooltip" title="{{ trans('admin.users.2fa.secured') }}"></i>
+                                @endif
                             </td>
                             <td>
                                 <span class="badge" style="{{ $user->role->getBadgeStyle() }}">

@@ -1,5 +1,41 @@
 @push('styles')
     <link href="{{ asset('vendor/easymde/easymde.min.css') }}" rel="stylesheet">
+    <style>
+        .editor-toolbar {
+            border-top-left-radius: var(--bs-border-radius);
+            border-top-right-radius: var(--bs-border-radius);
+            border: var(--bs-border-width) solid var(--bs-border-color);
+            border-bottom: 0;
+        }
+
+        .EasyMDEContainer .CodeMirror {
+            border-bottom-left-radius: var(--bs-border-radius);
+            border-bottom-right-radius: var(--bs-border-radius);
+            border: var(--bs-border-width) solid var(--bs-border-color);
+        }
+
+        .editor-toolbar .table {
+            width: unset;
+        }
+
+        .CodeMirror.cm-s-easymde,
+        .CodeMirror-fullscreen,
+        .editor-preview,
+        .editor-toolbar.fullscreen {
+            color: inherit;
+            background: var(--bs-body-bg);
+        }
+
+        .editor-toolbar button.active,
+        .editor-toolbar button:hover {
+            background: var(--bs-body-bg);
+            border-color: var(--bs-primary-border-subtle);
+        }
+
+        .CodeMirror-cursor {
+            border-color: var(--bs-body-color);
+        }
+    </style>
 @endpush
 
 @push('footer-scripts')

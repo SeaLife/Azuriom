@@ -12,8 +12,8 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 |
 | Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "api" middleware group. Make something great!
 |
 */
 
@@ -37,6 +37,7 @@ Route::prefix('/azlink')->middleware('server.token')->group(function () {
     Route::post('/user/{user}/money/set', [ServerController::class, 'setMoney']);
     Route::post('/register', [ServerController::class, 'register']);
     Route::post('/email', [ServerController::class, 'updateEmail']);
+    Route::post('/password', [ServerController::class, 'updatePassword']);
 });
 
 Route::get('/rss', [FeedController::class, 'rss'])->name('feeds.rss');

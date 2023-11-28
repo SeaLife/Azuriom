@@ -17,8 +17,6 @@ class ServerController extends Controller
 {
     /**
      * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
      */
     public function index()
     {
@@ -31,9 +29,6 @@ class ServerController extends Controller
     /**
      * Change the default server.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     *
      * @throws \Illuminate\Validation\ValidationException
      */
     public function changeDefault(Request $request)
@@ -44,14 +39,12 @@ class ServerController extends Controller
 
         Setting::updateSettings('servers.default', $request->input('server'));
 
-        return redirect()->route('admin.servers.index')
+        return to_route('admin.servers.index')
             ->with('success', trans('messages.status.success'));
     }
 
     /**
      * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
      */
     public function create()
     {
@@ -60,15 +53,13 @@ class ServerController extends Controller
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param  \Azuriom\Http\Requests\ServerRequest  $request
-     * @return \Illuminate\Http\Response
      */
     public function store(ServerRequest $request)
     {
         try {
             $server = new Server(array_merge($request->validated(), [
                 'token' => Str::random(32),
+                'data' => $request->input('data'),
             ]));
 
             if (! $server->bridge()->verifyLink()) {
@@ -88,18 +79,15 @@ class ServerController extends Controller
         }
 
         if ($request->input('redirect') === 'edit') {
-            return redirect()->route('admin.servers.edit', $server);
+            return to_route('admin.servers.edit', $server);
         }
 
-        return redirect()->route('admin.servers.index')
+        return to_route('admin.servers.index')
             ->with('success', trans('messages.status.success'));
     }
 
     /**
      * Show the form for editing the specified resource.
-     *
-     * @param  \Azuriom\Models\Server  $server
-     * @return \Illuminate\Http\Response
      */
     public function edit(Server $server)
     {
@@ -111,14 +99,10 @@ class ServerController extends Controller
 
     /**
      * Update the specified resource in storage.
-     *
-     * @param  \Azuriom\Http\Requests\ServerRequest  $request
-     * @param  \Azuriom\Models\Server  $server
-     * @return \Illuminate\Http\Response
      */
     public function update(ServerRequest $request, Server $server)
     {
-        $server->fill($request->validated());
+        $server->fill(array_merge($request->validated(), $request->only('data')));
 
         try {
             if (! $server->bridge()->verifyLink()) {
@@ -132,7 +116,7 @@ class ServerController extends Controller
         }
         $server->save();
 
-        return redirect()->route('admin.servers.index')
+        return to_route('admin.servers.index')
             ->with('success', trans('messages.status.success'));
     }
 
@@ -174,16 +158,13 @@ class ServerController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \Azuriom\Models\Server  $server
-     * @return \Illuminate\Http\Response
-     *
-     * @throws \Exception
+     * @throws \LogicException
      */
     public function destroy(Server $server)
     {
         $server->delete();
 
-        return redirect()->route('admin.servers.index')
+        return to_route('admin.servers.index')
             ->with('success', trans('messages.status.success'));
     }
 }

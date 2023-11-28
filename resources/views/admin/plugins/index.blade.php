@@ -83,6 +83,7 @@
                         <thead>
                         <tr>
                             <th scope="col">{{ trans('messages.fields.name') }}</th>
+                            <th scope="col">{{ trans('messages.fields.description') }}</th>
                             <th scope="col">{{ trans('messages.fields.author') }}</th>
                             <th scope="col">{{ trans('messages.fields.version') }}</th>
                             <th scope="col">{{ trans('messages.fields.action') }}</th>
@@ -97,14 +98,15 @@
                                         {{ $plugin['name'] }}
                                     </a>
 
-                                    <span class="badge bg-secondary text-white">
+                                    <span class="badge bg-secondary">
                                         <i class="bi bi-download"></i> {{ $plugin['downloads'] }}
                                     </span>
 
-                                    <span class="badge bg-secondary text-white">
+                                    <span class="badge bg-secondary">
                                         <i class="bi bi-heart"></i> {{ $plugin['likes'] }}
                                     </span>
                                 </th>
+                                <td>{{ $plugin['short_description'] }}</td>
                                 <td>{{ $plugin['author']['name'] }}</td>
                                 <td>{{ $plugin['version'] }}</td>
                                 <td>

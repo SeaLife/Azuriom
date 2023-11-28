@@ -16,15 +16,14 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Hashing\HashManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use Illuminate\Validation\Rule;
 
 class SettingsController extends Controller
 {
     /**
-     * The supported mail drivers.
-     *
-     * @var array
+     * The supported encryption types.
      */
     private array $mailEncryptionTypes = [
         'tls' => 'TLS',
@@ -33,8 +32,6 @@ class SettingsController extends Controller
 
     /**
      * The supported mail drivers.
-     *
-     * @var array
      */
     private array $mailMailers = [
         'smtp' => 'SMTP',
@@ -43,8 +40,6 @@ class SettingsController extends Controller
 
     /**
      * The supported hash algorithms.
-     *
-     * @var array
      */
     private array $hashAlgorithms = [
         'bcrypt' => 'Bcrypt',
@@ -54,31 +49,21 @@ class SettingsController extends Controller
 
     /**
      * The application instance.
-     *
-     * @var \Illuminate\Contracts\Foundation\Application
      */
-    private $app;
+    private Application $app;
 
     /**
      * The application cache.
-     *
-     * @var \Illuminate\Contracts\Cache\Repository
      */
-    private $cache;
+    private Cache $cache;
 
     /**
      * The Azuriom optimizer.
-     *
-     * @var \Azuriom\Support\Optimizer
      */
-    private $optimizer;
+    private Optimizer $optimizer;
 
     /**
      * Create a new controller instance.
-     *
-     * @param  \Illuminate\Contracts\Foundation\Application  $app
-     * @param  \Illuminate\Contracts\Cache\Repository  $cache
-     * @param  \Azuriom\Support\Optimizer  $optimizer
      */
     public function __construct(Application $app, Cache $cache, Optimizer $optimizer)
     {
@@ -89,8 +74,6 @@ class SettingsController extends Controller
 
     /**
      * Show the application settings.
-     *
-     * @return \Illuminate\Http\Response
      */
     public function index()
     {
@@ -114,9 +97,6 @@ class SettingsController extends Controller
     /**
      * Update the application settings.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     *
      * @throws \Illuminate\Validation\ValidationException
      */
     public function update(Request $request)
@@ -136,15 +116,15 @@ class SettingsController extends Controller
             'site-key' => ['nullable', 'string', 'size:50'],
             'posts_webhook' => ['nullable', 'url'],
         ]), [
-            'user_money_transfer' => $request->filled('user_money_transfer'),
+            'users.money_transfer' => $request->filled('user_money_transfer'),
             'url' => rtrim($request->input('url'), '/'), // Remove trailing end slash
         ]);
 
-        $old = Arr::except(Setting::updateSettings($settings), 'user_money_transfer');
+        $old = Arr::except(Setting::updateSettings($settings), 'users.money_transfer');
 
         ActionLog::log('settings.updated')?->createEntries($old, $settings);
 
-        $response = redirect()->route('admin.settings.index')
+        $response = to_route('admin.settings.index')
             ->with('success', trans('admin.settings.updated'));
 
         if (setting('register', true) !== $request->filled('register')) {
@@ -159,11 +139,7 @@ class SettingsController extends Controller
     /**
      * Update the application security settings.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     *
      * @throws \Illuminate\Validation\ValidationException
-     * @throws \Exception
      */
     public function updateSecurity(Request $request)
     {
@@ -204,7 +180,7 @@ class SettingsController extends Controller
 
         ActionLog::log('settings.updated')?->createEntries($old, $settings);
 
-        return redirect()->route('admin.settings.auth')
+        return to_route('admin.settings.auth')
             ->with('success', trans('admin.settings.updated'));
     }
 
@@ -217,12 +193,10 @@ class SettingsController extends Controller
 
     /**
      * Clear the application cache.
-     *
-     * @return \Illuminate\Http\Response
      */
     public function clearCache()
     {
-        $response = redirect()->route('admin.settings.performance');
+        $response = to_route('admin.settings.performance');
 
         if (! $this->cache->flush()) {
             return $response->with('error', trans('admin.settings.performances.cache.error'));
@@ -235,7 +209,7 @@ class SettingsController extends Controller
 
     public function enableAdvancedCache()
     {
-        $redirect = redirect()->route('admin.settings.performance');
+        $redirect = to_route('admin.settings.performance');
 
         if (! $this->optimizer->cache()) {
             return $redirect->with('error', trans('admin.settings.performances.boost.error'));
@@ -248,7 +222,7 @@ class SettingsController extends Controller
     {
         $this->optimizer->clear();
 
-        return redirect()->route('admin.settings.performance')
+        return to_route('admin.settings.performance')
             ->with('success', trans('messages.status.success'));
     }
 
@@ -261,7 +235,15 @@ class SettingsController extends Controller
 
         Files::relativeLink($target, $link);
 
-        return redirect()->route('admin.settings.performance')
+        return to_route('admin.settings.performance')
+            ->with('success', trans('messages.status.success'));
+    }
+
+    public function migrate()
+    {
+        Artisan::call('migrate', ['--force' => true, '--seed' => true]);
+
+        return to_route('admin.settings.performance')
             ->with('success', trans('messages.status.success'));
     }
 
@@ -275,9 +257,6 @@ class SettingsController extends Controller
 
     /**
      * Update the application SEO settings.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      *
      * @throws \Illuminate\Validation\ValidationException
      */
@@ -299,7 +278,7 @@ class SettingsController extends Controller
 
         ActionLog::log('settings.updated');
 
-        return redirect()->route('admin.settings.seo')
+        return to_route('admin.settings.seo')
             ->with('success', trans('admin.settings.updated'));
     }
 
@@ -319,29 +298,32 @@ class SettingsController extends Controller
         ]);
     }
 
+    /**
+     * Update the application auth settings.
+     *
+     * @throws \Illuminate\Validation\ValidationException
+     */
     public function updateAuth(Request $request)
     {
-        $settings = $this->validate($request, [
-            'conditions' => ['nullable', 'url', 'max:150'],
-        ]) + [
+        $validated = $this->validate($request, [
+            'conditions' => ['nullable', 'string', 'max:150'],
+        ]);
+
+        Setting::updateSettings(array_merge($validated, [
             'register' => $request->filled('register'),
             'auth_api' => $request->filled('auth_api'),
             'user.change_name' => $request->filled('user_change_name'),
             'user.delete' => $request->filled('user_delete'),
-        ];
-
-        Setting::updateSettings($settings);
+        ]));
 
         ActionLog::log('settings.updated');
 
-        return redirect()->route('admin.settings.auth')
+        return to_route('admin.settings.auth')
             ->with('success', trans('admin.settings.updated'));
     }
 
     /**
      * Show the application mail settings.
-     *
-     * @return \Illuminate\Http\Response
      */
     public function mail()
     {
@@ -355,14 +337,11 @@ class SettingsController extends Controller
     /**
      * Update the application mail settings.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     *
      * @throws \Illuminate\Validation\ValidationException
      */
     public function updateMail(Request $request)
     {
-        $mailSettings = $this->validate($request, [
+        $validated = $this->validate($request, [
             'from-address' => ['required', 'string', 'email'],
             'mailer' => ['nullable', Rule::in(array_keys($this->mailMailers))],
             'smtp-host' => ['required_if:driver,smtp', 'nullable', 'string'],
@@ -370,9 +349,11 @@ class SettingsController extends Controller
             'smtp-encryption' => ['nullable', Rule::in(array_keys($this->mailEncryptionTypes))],
             'smtp-username' => ['nullable', 'string'],
             'smtp-password' => ['nullable', 'string'],
-        ]) + [
+        ]);
+
+        $mailSettings = array_merge($validated, [
             'users_email_verification' => $request->filled('users_email_verification'),
-        ];
+        ]);
 
         if ($mailSettings['mailer'] === null) {
             $mailSettings['mailer'] = 'array';
@@ -389,7 +370,7 @@ class SettingsController extends Controller
 
         ActionLog::log('settings.updated');
 
-        return redirect()->route('admin.settings.mail')
+        return to_route('admin.settings.mail')
             ->with('success', trans('admin.settings.updated'));
     }
 
@@ -416,8 +397,6 @@ class SettingsController extends Controller
 
     /**
      * Show the application maintenance settings.
-     *
-     * @return \Illuminate\Http\Response
      */
     public function maintenance()
     {
@@ -430,9 +409,6 @@ class SettingsController extends Controller
 
     /**
      * Update the application maintenance settings.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      *
      * @throws \Illuminate\Validation\ValidationException
      */
@@ -452,7 +428,7 @@ class SettingsController extends Controller
             'maintenance.paths' => empty($paths) ? null : $paths,
         ]);
 
-        return redirect()->route('admin.settings.maintenance')
+        return to_route('admin.settings.maintenance')
             ->with('success', trans('admin.settings.updated'));
     }
 

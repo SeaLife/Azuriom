@@ -7,6 +7,12 @@ use Azuriom\Models\User;
 abstract class Game
 {
     /**
+     * The primary attribute that should be used when searching for a user, currently used in
+     * money transfer (in user profile, if enabled) and in some plugins.
+     */
+    protected UserAttribute $userPrimaryAttribute = UserAttribute::NAME;
+
+    /**
      * Get the id of this game.
      *
      * @return string
@@ -23,9 +29,6 @@ abstract class Game
     /**
      * Get the avatar URL of the user.
      *
-     * @param  \Azuriom\Models\User  $user
-     * @param  int  $size
-     *
      * @deprecated Will be removed in 1.0, use User::getAvatar()
      */
     abstract public function getAvatarUrl(User $user, int $size = 64);
@@ -33,23 +36,20 @@ abstract class Game
     /**
      * Get the game id of the user.
      *
-     * @param  string  $name
+     * @return string|null
      */
     abstract public function getUserUniqueId(string $name);
 
     /**
-     * Get the game user name.
+     * Get the game username of the user.
      *
-     * @param  \Azuriom\Models\User  $user
-     * @return mixed
+     * @return string|null
      */
     abstract public function getUserName(User $user);
 
     /**
      * Get the translation for a given key.
      *
-     * @param  string  $key
-     * @param  array  $placeholders
      * @return string
      */
     public function trans(string $key, array $placeholders = [])
@@ -93,5 +93,12 @@ abstract class Game
     public function isExtensionCompatible(array $supportedGames)
     {
         return in_array($this->id(), $supportedGames, true);
+    }
+
+    public function userPrimaryAttributeName(): string
+    {
+        return $this->userPrimaryAttribute === UserAttribute::NAME
+            ? trans('auth.name')
+            : $this->trans('id');
     }
 }

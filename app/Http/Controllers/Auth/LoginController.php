@@ -8,13 +8,15 @@ use Azuriom\Models\User;
 use Azuriom\Providers\RouteServiceProvider;
 use Exception;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Contracts\User as SocialUser;
 use Laravel\Socialite\Facades\Socialite;
+use Symfony\Component\HttpFoundation\Response;
 
 class LoginController extends Controller
 {
@@ -33,15 +35,11 @@ class LoginController extends Controller
 
     /**
      * Where to redirect users after login.
-     *
-     * @var string
      */
-    protected $redirectTo = RouteServiceProvider::HOME;
+    protected string $redirectTo = RouteServiceProvider::HOME;
 
     /**
      * Create a new controller instance.
-     *
-     * @return void
      */
     public function __construct()
     {
@@ -52,9 +50,6 @@ class LoginController extends Controller
 
     /**
      * Handle a login request to the application.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      *
      * @throws \Illuminate\Validation\ValidationException
      */
@@ -67,6 +62,8 @@ class LoginController extends Controller
 
             return $this->sendLockoutResponse($request);
         }
+
+        $this->ensureUserCanLogin($this->credentials($request));
 
         if (! $this->guard()->once($this->credentials($request))) {
             $this->incrementLoginAttempts($request);
@@ -84,7 +81,12 @@ class LoginController extends Controller
         return $this->loginUser($request, $user);
     }
 
-    protected function loginUser(Request $request, User $user, bool $isOauth = false)
+    /**
+     * Try to log in the given user or redirect to 2FA if needed.
+     *
+     * @throws \Illuminate\Validation\ValidationException
+     */
+    protected function loginUser(Request $request, User $user, bool $oauth = false): Response
     {
         if ($user->isBanned()) {
             throw ValidationException::withMessages([
@@ -96,24 +98,37 @@ class LoginController extends Controller
             return $this->sendMaintenanceResponse($request);
         }
 
-        if (! $isOauth && $user->hasTwoFactorAuth()) {
+        if (! $oauth && $user->hasTwoFactorAuth()) {
             return $this->redirectTo2fa($request, $user);
         }
 
-        $this->guard()->login($user, $isOauth || $request->filled('remember'));
+        $this->guard()->login($user, $oauth || $request->filled('remember'));
 
         return $this->sendLoginResponse($request);
     }
 
     /**
-     * Obtain the user information from the provider.
-     *
-     * @param  \Illuminate\Http\Request
-     * @return \Illuminate\Http\Response
+     * Make sure that the user does not need to reset his password.
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function handleProviderCallback(Request $request)
+    protected function ensureUserCanLogin(array $credential): void
+    {
+        $user = User::firstWhere(Arr::except($credential, 'password'));
+
+        if ($user?->mustChangePassword()) {
+            throw ValidationException::withMessages([
+                $this->username() => trans('passwords.change'),
+            ]);
+        }
+    }
+
+    /**
+     * Obtain the user information from the provider.
+     *
+     * @throws \Illuminate\Validation\ValidationException
+     */
+    public function handleProviderCallback(Request $request): Response
     {
         abort_if(! game()->loginWithOAuth(), 404);
 
@@ -142,22 +157,26 @@ class LoginController extends Controller
         return $this->loginUser($request, $user, true);
     }
 
-    protected function registerUser(Request $request, SocialUser $user)
+    protected function registerUser(Request $request, SocialUser $user): User
     {
-        return User::forceCreate([
+        $user = User::forceCreate([
             'name' => $user->getNickname() ?? $user->getName(),
             'email' => $user->getEmail(),
             'avatar' => $user->getAvatar(),
-            'password' => Hash::make(Str::random(32)),
+            'password' => Str::random(32),
             'game_id' => (string) $user->getId(),
             'last_login_ip' => $request->ip(),
             'last_login_at' => now(),
         ]);
+
+        event(new Registered($user));
+
+        return $user;
     }
 
     protected function redirectTo2fa(Request $request, User $user)
     {
-        $request->session()->flash('login.2fa', [
+        $request->session()->put('login.2fa', [
             'id' => $user->id,
             'remember' => $request->filled('remember'),
         ]);
@@ -166,19 +185,16 @@ class LoginController extends Controller
             return response()->json(['2fa' => true], 423);
         }
 
-        return redirect()->route('login.2fa');
+        return to_route('login.2fa');
     }
 
     /**
      * Show the application's 2fa form.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      */
     public function showCodeForm(Request $request)
     {
         if (! $request->session()->has('login.2fa.id')) {
-            return redirect()->route('login');
+            return to_route('login');
         }
 
         $request->session()->keep('login.2fa');
@@ -188,9 +204,6 @@ class LoginController extends Controller
 
     /**
      * Handle a 2fa request to the application.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      *
      * @throws \Illuminate\Auth\AuthenticationException
      * @throws \Illuminate\Validation\ValidationException
@@ -227,11 +240,8 @@ class LoginController extends Controller
 
     /**
      * Send the response after the user was authenticated.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Azuriom\Models\User  $user
      */
-    protected function authenticated(Request $request, $user)
+    protected function authenticated(Request $request, User $user): void
     {
         $user->forceFill([
             'last_login_ip' => $request->ip(),
@@ -260,11 +270,8 @@ class LoginController extends Controller
 
     /**
      * Get the needed authorization credentials from the request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
      */
-    protected function credentials(Request $request)
+    protected function credentials(Request $request): array
     {
         $username = $request->input($this->username());
 
@@ -275,9 +282,6 @@ class LoginController extends Controller
 
     /**
      * Get the maintenance response.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      */
     protected function sendMaintenanceResponse(Request $request)
     {
@@ -288,7 +292,7 @@ class LoginController extends Controller
         return redirect()->back()->with('error', trans('auth.maintenance'));
     }
 
-    protected function isMaintenance(User $user = null)
+    protected function isMaintenance(User $user = null): bool
     {
         if (! setting('maintenance.enabled', false)) {
             return false;

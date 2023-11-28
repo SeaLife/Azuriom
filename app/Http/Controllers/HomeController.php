@@ -3,13 +3,12 @@
 namespace Azuriom\Http\Controllers;
 
 use Azuriom\Models\Post;
+use Illuminate\Support\HtmlString;
 
 class HomeController extends Controller
 {
     /**
      * Show the application dashboard.
-     *
-     * @return \Illuminate\Contracts\Support\Renderable
      */
     public function index()
     {
@@ -18,9 +17,10 @@ class HomeController extends Controller
             ->latest('published_at')
             ->take(5)
             ->get();
+        $homeMessage = setting('home_message');
 
         return view('home', [
-            'message' => setting('home_message'),
+            'message' => $homeMessage ? new HtmlString($homeMessage) : null,
             'posts' => $posts,
         ]);
     }

@@ -11,17 +11,10 @@ use Illuminate\Http\Request;
 
 class UpdateController extends Controller
 {
-    /**
-     * The update manager instance.
-     *
-     * @var \Azuriom\Extensions\UpdateManager
-     */
-    protected $updates;
+    protected UpdateManager $updates;
 
     /**
      * Create a new controller instance.
-     *
-     * @param  \Azuriom\Extensions\UpdateManager  $updates
      */
     public function __construct(UpdateManager $updates)
     {
@@ -39,7 +32,7 @@ class UpdateController extends Controller
 
     public function fetch()
     {
-        $response = redirect()->route('admin.update.index');
+        $response = to_route('admin.update.index');
 
         try {
             $this->updates->forceFetchUpdates();
@@ -70,7 +63,7 @@ class UpdateController extends Controller
             $this->updates->download($update);
         } catch (Exception $e) {
             return response()->json([
-                'message' => trans('message.status.error', [
+                'message' => trans('messages.status.error', [
                     'error' => $e->getMessage(),
                 ]),
             ], 422);

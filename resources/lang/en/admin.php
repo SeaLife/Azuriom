@@ -123,7 +123,7 @@ return [
                 'title' => 'Captcha',
                 'site_key' => 'Site key',
                 'secret_key' => 'Secret key',
-                'recaptcha' => 'You can get reCaptcha keys on the <a href="https://www.google.com/recaptcha/" target="_blank" rel="noopener noreferrer"> Google reCaptcha website</a>. You need to use reCaptcha <strong>v2 invisible</strong> keys.',
+                'recaptcha' => 'You can get reCAPTCHA keys on the <a href="https://www.google.com/recaptcha/" target="_blank" rel="noopener noreferrer"> Google reCAPTCHA website</a>. You need to use reCAPTCHA <strong>v2 invisible</strong> keys.',
                 'hcaptcha' => 'You can get hCaptcha keys on the <a href="https://www.hcaptcha.com/" target="_blank" rel="noopener noreferrer"> hCaptcha website</a>.',
                 'turnstile' => 'You can get Turnstil keys on the <a href="https://dash.cloudflare.com/?to=/:account/turnstile" target="_blank" rel="noopener noreferrer">Cloudflare dashboard</a>. You must select "Managed" widget.',
             ],
@@ -176,8 +176,8 @@ return [
         'auth' => [
             'title' => 'Authentication',
 
-            'conditions' => 'Conditions URL',
-            'conditions_info' => 'Users will have to accept these conditions when registering.',
+            'conditions' => 'Conditions to be accepted on registration',
+            'conditions_info' => 'Links in Markdown format, for example: <code>I accept the [conditions](/conditions-link) and [privacy policy](/privacy-policy)</code>',
             'registration' => 'Enable user registration',
             'registration_info' => 'It can still be possible to register through plugins.',
             'api' => 'Enable Auth API',
@@ -265,11 +265,12 @@ return [
 
         'query_port_info' => 'Can be empty if it\'s the same as the game port.',
 
-        'verify' => 'Verify the connection',
+        'verify' => 'Test instant commands',
 
         'rcon_password' => 'Rcon Password',
         'rcon_port' => 'Rcon Port',
         'query_port' => 'Source Query Port',
+        'unturned_info' => 'You need to use SRCDS RCON type in OpenMod. RocketMod RCON is not compatible!',
 
         'azlink' => [
             'port' => 'AzLink Port',
@@ -353,14 +354,23 @@ return [
 
         '2fa' => [
             'title' => 'Two Factor Authentication',
+            'secured' => '2FA enabled',
             'disable' => 'Disable 2FA',
             'disabled' => 'The Two Factor Authentication has been disabled.',
+        ],
+
+        'password' => [
+            'title' => 'Last password change',
+            'force' => 'Force change',
+            'forced' => 'Must change password',
         ],
 
         'status' => [
             'banned' => 'This user is now banned.',
             'unbanned' => 'This user has been unbanned.',
         ],
+
+        'discord' => 'Linked Discord account',
 
         'notify' => 'Send a notification',
         'notify_info' => 'Send a notification to this user',
@@ -369,8 +379,10 @@ return [
 
     'roles' => [
         'title' => 'Roles',
-        'edit' => 'Edit role :role',
+        'edit' => 'Edit role :role (#:id)',
         'create' => 'Create role',
+
+        'info' => '(ID: :id, Power: :power)',
 
         'default' => 'Default',
         'admin' => 'Admin',
@@ -382,6 +394,19 @@ return [
         'remove_admin' => 'You can\'t remove the admin permission of your role.',
         'delete_default' => 'This role cannot be deleted.',
         'delete_own' => 'You cannot delete your role.',
+
+        'discord' => [
+            'title' => 'Link Discord roles',
+            'enable' => 'Enable Discord roles link',
+            'enable_info' => 'Once enabled, edit the role on Discord, and add a requirement in the <b>Links</b> tab. Users can get their Discord role in the server menu, in <b>Linked Roles</b>.',
+            'info' => 'You need to create an application on the <a href="https://discord.com/developers/applications" target="_blank">Discord developer dashboard</a> and set the <b>Linked Role Verification URL</b> to <code>:url</code>',
+            'oauth' => 'Then, in <b>OAuth2</b> and in <b>General</b>, you need to add <code>:url</code> in the <b>Redirects</b>.',
+            'token_info' => 'The Bot token can be obtained by creating a bot for your application, in the <b>Bot</b> tab on the left of the Discord developer dashboard.',
+
+            'token' => 'Discord Bot Token',
+            'client_id' => 'Discord Client ID',
+            'client_secret' => 'Discord Client Secret',
+        ],
     ],
 
     'permissions' => [
@@ -461,7 +486,7 @@ return [
         'available' => 'Available plugins',
 
         'requirements' => [
-            'api' => 'This plugin version is not compatible with Azuriom v1.0.',
+            'api' => 'This plugin version is not compatible with Azuriom v:version.',
             'azuriom' => 'This plugin is not compatible with your Azuriom version.',
             'game' => 'This plugin is not compatible with the game :game.',
             'plugin' => 'The plugin ":plugin" is missing or its version is not compatible with this plugin.',
@@ -485,7 +510,7 @@ return [
         'list' => 'Installed themes',
         'available' => 'Available themes',
         'no-enabled' => 'You don\'t have any themes enabled.',
-        'legacy' => 'This theme version is not compatible with Azuriom v1.0.',
+        'legacy' => 'This theme version is not compatible with Azuriom v:version.',
 
         'config' => 'Edit config',
         'disable' => 'Disable theme',

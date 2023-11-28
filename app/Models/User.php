@@ -7,12 +7,12 @@ use Azuriom\Models\Traits\Searchable;
 use Azuriom\Models\Traits\TwoFactorAuthenticatable;
 use Azuriom\Notifications\ResetPassword as ResetPasswordNotification;
 use Azuriom\Notifications\VerifyEmail as VerifyEmailNotification;
+use Azuriom\Support\Discord\LinkedRoles;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
@@ -30,10 +30,12 @@ use Illuminate\Support\Str;
  * @property string[]|null $two_factor_recovery_codes
  * @property string|null $last_login_ip
  * @property \Carbon\Carbon|null $last_login_at
+ * @property \Carbon\Carbon|null $password_changed_at
  * @property string|null $remember_token
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
  * @property \Carbon\Carbon|null $deleted_at
+ * @property \Azuriom\Models\DiscordAccount|null $discordAccount
  * @property \Illuminate\Support\Collection|\Azuriom\Models\Post[] $posts
  * @property \Illuminate\Support\Collection|\Azuriom\Models\Comment[] $comments
  * @property \Illuminate\Support\Collection|\Azuriom\Models\Like[] $likes
@@ -55,16 +57,17 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * The attributes that are mass assignable.
      *
-     * @var array
+     * @var array<int, string>
      */
     protected $fillable = [
-        'name', 'email', 'password', 'money', 'role_id', 'game_id', 'avatar', 'access_token', 'two_factor_secret',
+        'name', 'email', 'password', 'money', 'role_id', 'game_id', 'avatar',
+        'access_token', 'two_factor_secret', 'password_changed_at',
     ];
 
     /**
      * The attributes that should be hidden for arrays.
      *
-     * @var array
+     * @var array<int, string>
      */
     protected $hidden = [
         'password', 'remember_token', 'access_token', 'last_login_ip', 'two_factor_secret',
@@ -73,13 +76,15 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * The attributes that should be cast to native types.
      *
-     * @var array
+     * @var array<string, string>
      */
     protected $casts = [
+        'password' => 'hashed',
         'money' => 'float',
         'two_factor_recovery_codes' => 'array',
         'email_verified_at' => 'datetime',
         'last_login_at' => 'datetime',
+        'password_changed_at' => 'datetime',
         'deleted_at' => 'datetime',
     ];
 
@@ -93,13 +98,29 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     /**
-     * The attributes that can be search for.
+     * The attributes that can be used for search.
      *
-     * @var array
+     * @var array<int, string>
      */
-    protected $searchable = [
-        'email', 'name', 'game_id', 'role.*',
+    protected array $searchable = [
+        'email', 'name', 'game_id', 'role.*', 'discordAccount.*',
     ];
+
+    protected static function booted(): void
+    {
+        self::creating(function (self $user) {
+            if ($user->password_changed_at === null) {
+                $user->password_changed_at = $user->freshTimestamp();
+            }
+        });
+
+        self::updated(function (self $user) {
+            if ($user->discordAccount !== null &&
+                $user->role_id !== $user->getOriginal('role_id')) {
+                LinkedRoles::linkRole($user->discordAccount);
+            }
+        });
+    }
 
     /**
      * Get the posts of this user.
@@ -134,7 +155,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get the the ban of this user if he is currently banned.
+     * Get the active ban of this user if he is currently banned.
      */
     public function ban()
     {
@@ -157,19 +178,21 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Notification::class)->latest();
     }
 
+    public function discordAccount()
+    {
+        return $this->hasOne(DiscordAccount::class);
+    }
+
     /**
      * Get the user's avatar url.
      * The size may not correspond depending on the provider.
-     *
-     * @param  int  $size
-     * @return string
      */
-    public function getAvatar(int $size = 64)
+    public function getAvatar(int $size = 64): string
     {
         return $this->avatar ?? game()->getAvatarUrl($this, $size);
     }
 
-    public function isBanned(bool $useCache = false)
+    public function isBanned(bool $useCache = false): bool
     {
         if ($useCache) {
             return Cache::remember("users.{$this->id}.banned", now()->addHour(), function () {
@@ -180,12 +203,15 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->ban !== null;
     }
 
-    public function isDeleted()
+    public function isDeleted(): bool
     {
         return $this->deleted_at !== null;
     }
 
-    protected function performDeleteOnModel()
+    /**
+     * Perform the actual delete query on this model instance.
+     */
+    protected function performDeleteOnModel(): void
     {
         $this->comments()->delete();
         $this->likes()->delete();
@@ -194,59 +220,60 @@ class User extends Authenticatable implements MustVerifyEmail
         $this->forceFill([
             'name' => 'Deleted #'.$this->id,
             'email' => null,
-            'password' => Hash::make(Str::random()),
+            'password' => Str::random(),
             'role_id' => Role::defaultRoleId(),
             'game_id' => null,
             'access_token' => null,
             'two_factor_secret' => null,
             'email_verified_at' => null,
             'last_login_ip' => null,
+            'password_changed_at' => null,
             'deleted_at' => $this->freshTimestamp(),
         ])->save();
     }
 
-    public function flushBanCache()
+    public function flushBanCache(): void
     {
         Cache::forget("users.{$this->id}.banned");
     }
 
-    public function hasPermission($permission)
+    public function hasPermission($permission): bool
     {
         return $this->role->hasPermission($permission);
     }
 
-    public function hasTwoFactorAuth()
+    public function hasTwoFactorAuth(): bool
     {
         return $this->two_factor_secret !== null;
     }
 
-    public function hasAdminAccess()
+    public function hasAdminAccess(): bool
     {
         return $this->can('admin.access');
     }
 
-    public function isAdmin()
+    public function isAdmin(): bool
     {
         return $this->role->is_admin;
     }
 
+    public function mustChangePassword(): bool
+    {
+        return $this->password_changed_at === null;
+    }
+
     /**
      * Send the password reset notification.
-     *
-     * @param  string  $token
-     * @return void
      */
-    public function sendPasswordResetNotification($token)
+    public function sendPasswordResetNotification($token): void
     {
         $this->notify(new ResetPasswordNotification($token));
     }
 
     /**
      * Send the email verification notification.
-     *
-     * @return void
      */
-    public function sendEmailVerificationNotification()
+    public function sendEmailVerificationNotification(): void
     {
         $this->notify(new VerifyEmailNotification());
     }

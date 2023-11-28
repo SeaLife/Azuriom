@@ -189,6 +189,30 @@
                                 @endif
                             </div>
                         </form>
+
+                        <form action="{{ route('admin.users.force-password', $user) }}" method="POST">
+                            @csrf
+
+                            <div class="mb-3">
+                                <label class="form-label" for="forcePassword">{{ trans('admin.users.password.title') }}</label>
+
+                                @if($user->mustChangePassword())
+                                    <input type="text" class="form-control" id="forcePassword" value="{{ trans('admin.users.password.forced') }}" disabled>
+                                @else
+                                    <div class="input-group mb-3">
+                                        @if($user->password_changed_at->eq($user->created_at))
+                                            <input type="text" class="form-control" id="forcePassword" value="{{ trans('messages.unknown') }}" disabled>
+                                        @else
+                                            <input type="text" class="form-control" id="forcePassword" value="{{ format_date_compact($user->password_changed_at) }}" disabled>
+                                        @endif
+
+                                        <button class="btn btn-outline-danger" type="submit">
+                                            {{ trans('admin.users.password.force') }}
+                                        </button>
+                                    </div>
+                                @endif
+                            </div>
+                        </form>
                     @endif
 
                     <div class="mb-3">
@@ -202,23 +226,27 @@
                             <input type="text" class="form-control" id="idInput" value="{{ $user->game_id }}" disabled>
                         </div>
                     @endif
+
+                    @if($user->discordAccount !== null)
+                        <form action="{{ route('admin.users.discord.unlink', $user) }}" method="POST">
+                            @csrf
+
+                            <div class="mb-3">
+                                <label class="form-label" for="discordInput">{{ trans('admin.users.discord') }}</label>
+
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control" id="discordInput" value="{{ $user->discordAccount->name }}" disabled>
+
+                                    <button class="btn btn-outline-danger" type="submit">
+                                        {{ trans('messages.actions.remove') }}
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    @endif
                 </div>
             </div>
         </div>
-
-        @foreach($cards ?? [] as $card)
-            <div class="col-md-6">
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">{{ $card['name'] }}</h5>
-                    </div>
-                    <div class="card-body">
-                        @include($card['view'])
-                    </div>
-                </div>
-            </div>
-        @endforeach
-
     </div>
 
     @if(! $user->isBanned())
@@ -298,6 +326,21 @@
             </div>
         </div>
     @endif
+
+    <div class="row gy-4">
+        @foreach($cards ?? [] as $card)
+            <div class="col-md-6">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">{{ $card['name'] }}</h5>
+                    </div>
+                    <div class="card-body">
+                        @include($card['view'])
+                    </div>
+                </div>
+            </div>
+        @endforeach
+    </div>
 
     @include('admin.users._notify', ['route' => route('admin.users.notify', ['user' => $user])])
 @endsection

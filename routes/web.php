@@ -18,8 +18,8 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 |
 | Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "web" middleware group. Make something great!
 |
 */
 
@@ -37,7 +37,7 @@ Route::prefix('user')->group(function () {
 
     Route::prefix('/2fa')->name('login.')->group(function () {
         Route::get('/', [LoginController::class, 'showCodeForm'])->name('2fa');
-        Route::post('/', [LoginController::class, 'verifyCode'])->name('2fa-verify');
+        Route::post('/', [LoginController::class, 'verifyCode'])->name('2fa-verify')->middleware('throttle:two-factor');
     });
 });
 
@@ -45,14 +45,20 @@ Route::prefix('users')->name('users.')->middleware('auth')->group(function () {
     Route::get('/search', [UserController::class, 'search'])->name('search');
 });
 
+Route::post('/profile/theme', [ProfileController::class, 'theme'])->name('profile.theme');
+
 Route::prefix('profile')->name('profile.')->middleware('auth')->group(function () {
     Route::get('/', [ProfileController::class, 'index'])->name('index');
-
-    Route::post('/theme', [ProfileController::class, 'theme'])->name('theme');
 
     Route::post('/email', [ProfileController::class, 'updateEmail'])->name('email');
     Route::post('/password', [ProfileController::class, 'updatePassword'])->name('password');
     Route::post('/name', [ProfileController::class, 'updateName'])->name('name');
+
+    Route::prefix('discord')->name('discord.')->group(function () {
+        Route::get('/link', [ProfileController::class, 'linkDiscord'])->name('link');
+        Route::get('/callback', [ProfileController::class, 'discordCallback'])->name('callback');
+        Route::post('/unlink', [ProfileController::class, 'unlinkDiscord'])->name('unlink');
+    });
 
     Route::prefix('2fa')->name('2fa.')->middleware('password.confirm')->group(function () {
         Route::get('/', [ProfileController::class, 'show2fa'])->name('index');
